@@ -1051,11 +1051,14 @@ function buildDesk(g,it){
 }
 function buildRug(g,it){
   var s=dimsOf(it),w=s.w,d=s.d,c=s.c;
-  addBox(g,w,0.012,d,0,0.006,0,shade(c,-0.14),{roughness:1,metalness:0,cast:false});
-  addBox(g,Math.max(0.05,w-0.12),0.008,Math.max(0.05,d-0.12),0,0.014,0,c,{roughness:1,metalness:0,cast:false});
+  addBox(g,w,0.012,d,0,0.006,0,shade(c,-0.34),{roughness:0.95,metalness:0,cast:false});
+  addBox(g,Math.max(0.05,w-0.14),0.008,Math.max(0.05,d-0.14),0,0.014,0,c,{roughness:0.95,metalness:0,cast:false});
   if(w>0.7&&d>0.7){
-    var m=Math.min(w,d)*0.28;
-    addBox(g,m,0.006,m,0,0.02,0,shade(c,-0.06),{roughness:1,cast:false});
+    addBox(g,Math.max(0.05,w-0.32),0.006,0.05,0,0.02,0,shade(c,-0.24),{roughness:1,cast:false});
+    addBox(g,0.05,0.006,Math.max(0.05,d-0.32),0,0.02,0,shade(c,-0.24),{roughness:1,cast:false});
+    var m=Math.min(w,d)*0.36;
+    addBox(g,m,0.006,m,0,0.024,0,shade(c,-0.18),{roughness:1,cast:false});
+    addBox(g,m*0.52,0.006,m*0.52,0,0.028,0,shade(c,0.22),{roughness:1,cast:false});
   }
 }
 function buildPlant(g,it){
@@ -1113,21 +1116,26 @@ function wallParts(length,holes){
   return parts;
 }
 function floorTexture(W,L){
-  var ppm=140,cw=Math.max(64,Math.round(W*ppm)),ch=Math.max(64,Math.round(L*ppm)),max=1024;
+  var ppm=160,cw=Math.max(64,Math.round(W*ppm)),ch=Math.max(64,Math.round(L*ppm)),max=1024;
   if(cw>max||ch>max){var k=max/Math.max(cw,ch);cw=Math.max(64,Math.round(cw*k));ch=Math.max(64,Math.round(ch*k));}
   var c=document.createElement('canvas');c.width=cw;c.height=ch;
-  var g=c.getContext('2d'),sx=cw/W,sy=ch/L,plank=0.16,z,i=0;
-  g.fillStyle='#d7b48a';g.fillRect(0,0,cw,ch);
+  var g=c.getContext('2d'),sx=cw/W,sy=ch/L,plank=0.13,z,i=0;
+  var tones=['#c48945','#a86c32','#b67a3c','#8d5828','#d19a56','#9a6230'];
+  g.fillStyle='#5c3a1e';g.fillRect(0,0,cw,ch);
   for(z=0;z<L-0.001;z+=plank,i++){
     var y0=z*sy,hh=Math.min(plank,L-z)*sy+1;
-    g.fillStyle=(i%2)?'#e4c7a2':'#d2ad7e';
+    g.fillStyle=tones[i%tones.length];
     g.fillRect(0,y0,cw,hh);
-    g.fillStyle='rgba(255,244,220,0.18)';
-    g.fillRect(((i*37)%7)*sx*0.2,y0,cw*0.45,hh);
-    g.strokeStyle='rgba(92,60,30,0.28)';g.lineWidth=1;
+    g.fillStyle='rgba(255,214,160,0.1)';
+    g.fillRect(0,y0,cw,Math.max(1,hh*0.2));
+    g.strokeStyle='rgba(48,26,10,0.72)';
+    g.lineWidth=Math.max(1,sy*0.016);
     g.beginPath();g.moveTo(0,y0+0.5);g.lineTo(cw,y0+0.5);g.stroke();
-    g.strokeStyle='rgba(120,78,40,0.16)';
-    g.beginPath();var gy=y0+hh*0.55;g.moveTo(0,gy);g.bezierCurveTo(cw*0.25,gy-3,cw*0.7,gy+4,cw,gy-1);g.stroke();
+    var x=(i%2)?0.42:0.08,gap=0.9+((i*3)%5)*0.08;
+    g.strokeStyle='rgba(48,26,10,0.5)';
+    for(;x<W;x+=gap){g.beginPath();g.moveTo(x*sx,y0);g.lineTo(x*sx,y0+hh);g.stroke();}
+    g.strokeStyle='rgba(74,40,14,0.3)';g.lineWidth=1;
+    g.beginPath();var gy=y0+hh*0.55;g.moveTo(0,gy);g.bezierCurveTo(cw*0.28,gy-hh*0.28,cw*0.62,gy+hh*0.22,cw,gy-hh*0.05);g.stroke();
   }
   function strokeGrid(step,col,lw){
     g.strokeStyle=col;g.lineWidth=lw;
@@ -1135,8 +1143,8 @@ function floorTexture(W,L){
     for(x=step;x<W-0.01;x+=step){g.beginPath();g.moveTo(x*sx,0);g.lineTo(x*sx,ch);g.stroke();}
     for(zz=step;zz<L-0.01;zz+=step){g.beginPath();g.moveTo(0,zz*sy);g.lineTo(cw,zz*sy);g.stroke();}
   }
-  strokeGrid(0.5,'rgba(90,62,36,0.1)',1);
-  strokeGrid(1,'rgba(70,46,24,0.18)',1.5);
+  strokeGrid(0.5,'rgba(62,34,12,0.07)',1);
+  strokeGrid(1,'rgba(48,26,10,0.14)',1.25);
   var tex=new THREE.CanvasTexture(c);
   tex.colorSpace=THREE.SRGBColorSpace;
   tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
@@ -1234,7 +1242,7 @@ function rebuild3d(){
   var ground=new THREE.Mesh(trackGeo(new THREE.PlaneGeometry(80,80)),M('#e5ebf2',{roughness:1,metalness:0}));
   ground.rotation.x=-Math.PI/2;ground.position.set(W/2,-0.03,L/2);ground.receiveShadow=true;ground.castShadow=false;root3.add(ground);
   var tex=floorTexture(W,L);
-  var floor=new THREE.Mesh(trackGeo(new THREE.PlaneGeometry(W,L)),M('#ffffff',{map:tex,roughness:0.86,metalness:0}));
+  var floor=new THREE.Mesh(trackGeo(new THREE.PlaneGeometry(W,L)),M('#ffffff',{map:tex,roughness:0.78,metalness:0}));
   floor.rotation.x=-Math.PI/2;floor.position.set(W/2,0,L/2);floor.receiveShadow=true;floor.castShadow=false;root3.add(floor);
   var holes={n:[],s:[],e:[],w:[]},opens=[];
   items.forEach(function(it){
@@ -1336,7 +1344,21 @@ function pick3d(ev){
 }
 function initRenderer(){
   var canvasHost=$('#view3d');
-  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance',failIfMajorPerformanceCaveat:false});
+  // r186 ignores the alpha flag and always opens a transparent canvas. The
+  // room is opaque, so the context is created here and handed in.
+  var canvas=document.createElement('canvas');
+  var gl=canvas.getContext('webgl2',{
+    alpha:false,
+    depth:true,
+    stencil:false,
+    antialias:true,
+    premultipliedAlpha:false,
+    preserveDrawingBuffer:true,
+    powerPreference:'high-performance',
+    failIfMajorPerformanceCaveat:false
+  });
+  if(!gl)throw new Error('WebGL2 is not available');
+  renderer=new THREE.WebGLRenderer({canvas:canvas,context:gl,antialias:true});
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.NeutralToneMapping;
   renderer.toneMappingExposure=1.08;
@@ -1360,7 +1382,7 @@ function initRenderer(){
   dirLight.shadow.mapSize.set(sm,sm);
   dirLight.shadow.bias=-0.00025;
   dirLight.shadow.normalBias=0.035;
-  dirLight.shadow.radius=2;
+  dirLight.shadow.radius=3;
   scene3.add(dirLight);
   scene3.add(dirLight.target);
   fillLight=new THREE.DirectionalLight(0xd7e6ff,0.85);
